@@ -28,12 +28,7 @@ yarn-error.log*
 next-env.d.ts
 
 # Project specific
-data/uploads/*
-data/indices/*
-data/documents/*
-!data/documents/.gitkeep
-!data/uploads/.gitkeep
-!data/indices/.gitkeep
+data/*
 
 # OS files
 .DS_Store
