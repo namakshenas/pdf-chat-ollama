@@ -1,3 +1,4 @@
+// lib/pdfHandler.ts
 import fs from 'fs';
 import path from 'path';
 import { generateResponse } from './ollama';
@@ -6,7 +7,7 @@ import { generateResponse } from './ollama';
 export async function processPDF(
   filePath: string,
   modelName: string = 'llama3'
-) {
+): Promise<string> {
   try {
     // Get the document ID from the file path
     const documentId = path.basename(filePath, path.extname(filePath));
@@ -42,7 +43,7 @@ export async function queryDocument(
   documentId: string,
   query: string,
   modelName: string = 'llama3'
-) {
+): Promise<string> {
   try {
     // Path to the document metadata
     const documentDir = path.join(process.cwd(), 'data', 'documents', documentId);
