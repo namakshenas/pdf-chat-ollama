@@ -1,0 +1,95 @@
+import { LlamaIndex } from "llamaindex";
+import fs from 'fs';
+import path from 'path';
+
+// Function to create vector store index from PDF file
+export async function createIndexFromPDF(
+  filePath: string,
+  modelName: string = 'llama3'
+) {
+  try {
+    // Get the document ID from the file path
+    const documentId = path.basename(filePath, path.extname(filePath));
+    
+    // Create directory for the document
+    const documentDir = path.join(process.cwd(), 'data', 'documents', documentId);
+    if (!fs.existsSync(documentDir)) {
+      fs.mkdirSync(documentDir, { recursive: true });
+    }
+    
+    // Copy the file to the document directory
+    const documentPath = path.join(documentDir, path.basename(filePath));
+    fs.copyFileSync(filePath, documentPath);
+    
+    // Initialize LlamaIndex
+    const llama = new LlamaIndex({
+      llms: [{
+        type: "ollama",
+        modelName: modelName,
+        baseUrl: process.env.OLLAMA_HOST || 'http://localhost:11434'
+      }],
+      embeddings: [{
+        type: "ollama",
+        modelName: modelName,
+        baseUrl: process.env.OLLAMA_HOST || 'http://localhost:11434'
+      }]
+    });
+    
+    // Load and index the document
+    const docs = await llama.loadDocuments(documentDir);
+    const index = await llama.createIndex(docs);
+    
+    // Save the index
+    const persistDir = path.join(process.cwd(), 'data', 'indices', documentId);
+    if (!fs.existsSync(persistDir)) {
+      fs.mkdirSync(persistDir, { recursive: true });
+    }
+    
+    await index.save(persistDir);
+    
+    return documentId;
+  } catch (error) {
+    console.error('Error creating index:', error);
+    throw error;
+  }
+}
+
+// Function to query the index
+export async function queryIndex(
+  documentId: string,
+  query: string,
+  modelName: string = 'llama3'
+) {
+  try {
+    // Path to the saved index
+    const persistDir = path.join(process.cwd(), 'data', 'indices', documentId);
+    
+    // Initialize LlamaIndex
+    const llama = new LlamaIndex({
+      llms: [{
+        type: "ollama",
+        modelName: modelName,
+        baseUrl: process.env.OLLAMA_HOST || 'http://localhost:11434'
+      }],
+      embeddings: [{
+        type: "ollama",
+        modelName: modelName,
+        baseUrl: process.env.OLLAMA_HOST || 'http://localhost:11434'
+      }]
+    });
+    
+    // Load the index
+    const index = await llama.loadIndex(persistDir);
+    
+    // Create a query engine
+    const queryEngine = index.asQueryEngine();
+    
+    // Query the index
+    const response = await queryEngine.query(query);
+    
+    return response.toString();
+  } catch (error) {
+    console.error('Error querying index:', error);
+    throw error;
+  }
+}
