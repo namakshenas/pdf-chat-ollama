@@ -1,6 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { TextInput, Button, Text } from '@mantine/core';
-import { IconSend, IconUser, IconRobot, IconFilePdf } from '@tabler/icons-react';
+import { 
+  Paper, 
+  TextInput, 
+  Button, 
+  Text, 
+  Group, 
+  ScrollArea, 
+  Stack, 
+  Loader, 
+  Select,
+  Avatar,
+  Box,
+  Divider,
+  Badge
+} from '@mantine/core';
+import { IconSend, IconUser, IconRobot } from '@tabler/icons-react';
 import { Message } from '../types';
 import { useModels } from '../hooks/useModels';
 
@@ -16,7 +30,7 @@ export function ChatInterface({ documentId, documentName }: ChatInterfaceProps) 
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   
   const { models } = useModels();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const viewport = useRef<HTMLDivElement>(null);
   
   // Set a default model when models are loaded
   useEffect(() => {
@@ -27,8 +41,8 @@ export function ChatInterface({ documentId, documentName }: ChatInterfaceProps) 
   
   // Scroll to bottom when messages change
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (viewport.current) {
+      viewport.current.scrollTo({ top: viewport.current.scrollHeight, behavior: 'smooth' });
     }
   }, [messages]);
   
@@ -85,194 +99,122 @@ export function ChatInterface({ documentId, documentName }: ChatInterfaceProps) 
   };
   
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Header */}
-      <div style={{ 
-        padding: '12px 16px',
-        borderBottom: '1px solid #e0e0e0',
-        backgroundColor: '#f9f9f9',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <IconFilePdf size={20} color="#1890ff" />
-          <Text weight={500}>{documentName}</Text>
-        </div>
+    <Box
+      style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        height: '100%',
+        padding: '0'
+      }}
+    >
+      <Group 
+        position="apart" 
+        style={{ 
+          padding: '12px 16px',
+          borderBottom: '1px solid var(--mantine-color-gray-3)',
+        }}
+      >
+        <Group>
+          <Text weight={600} size="lg">
+            {documentName}
+          </Text>
+          <Badge color="blue" variant="light">PDF</Badge>
+        </Group>
         
-        <select
-          value={selectedModel || ''}
-          onChange={(e) => setSelectedModel(e.target.value)}
-          style={{ 
-            padding: '4px 8px', 
-            borderRadius: '4px', 
-            border: '1px solid #d9d9d9',
-            fontSize: '14px',
-            width: '180px'
-          }}
-        >
-          <option value="" disabled>Select a model</option>
-          {models.map(model => (
-            <option key={model} value={model}>{model}</option>
-          ))}
-        </select>
-      </div>
+        <Select
+          placeholder="Select model for chat"
+          data={models.map(model => ({ value: model, label: model }))}
+          value={selectedModel}
+          onChange={setSelectedModel}
+          style={{ width: 200 }}
+          size="sm"
+        />
+      </Group>
       
-      {/* Messages Area */}
-      <div style={{ 
-        flex: 1, 
-        overflowY: 'auto', 
-        padding: '16px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '16px'
-      }}>
-        {messages.length === 0 ? (
-          <div style={{
-            margin: '80px auto',
-            maxWidth: '500px',
-            padding: '24px',
-            border: '1px solid #e0e0e0',
-            borderRadius: '8px',
-            backgroundColor: '#f9f9f9',
-            textAlign: 'center'
-          }}>
-            <IconFilePdf size={40} style={{ marginBottom: '16px', opacity: 0.5 }} />
-            <h3 style={{ marginBottom: '8px' }}>Start a conversation</h3>
-            <p style={{ color: '#666' }}>
-              Ask questions about "{documentName}" and receive answers based on its content
-            </p>
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              style={{
-                display: 'flex',
-                justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
-                width: '100%'
-              }}
-            >
-              <div style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '8px',
-                maxWidth: '75%'
-              }}>
+      <ScrollArea
+        style={{ flex: 1 }}
+        viewportRef={viewport}
+        offsetScrollbars
+        p="md"
+      >
+        <Stack spacing="md">
+          {messages.length === 0 ? (
+            <Text color="dimmed" align="center" my="xl">
+              Send a message to start chatting with this document
+            </Text>
+          ) : (
+            messages.map((message) => (
+              <Group
+                key={message.id}
+                align="flex-start"
+                style={{
+                  alignSelf: message.role === 'user' ? 'flex-end' : 'flex-start',
+                  maxWidth: '80%',
+                  marginLeft: message.role === 'user' ? 'auto' : 0,
+                  marginRight: message.role === 'user' ? 0 : 'auto',
+                }}
+              >
                 {message.role === 'assistant' && (
-                  <div style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    backgroundColor: '#1890ff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white'
-                  }}>
+                  <Avatar radius="xl" color="blue">
                     <IconRobot size={20} />
-                  </div>
+                  </Avatar>
                 )}
                 
-                <div style={{
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: '1px solid #e0e0e0',
-                  backgroundColor: message.role === 'user' ? '#e6f7ff' : '#f9f9f9',
-                  wordBreak: 'break-word'
-                }}>
-                  <div>{message.content}</div>
-                  <div style={{
-                    fontSize: '12px',
-                    color: '#999',
-                    textAlign: 'right',
-                    marginTop: '4px'
-                  }}>
+                <Paper
+                  p="sm"
+                  radius="md"
+                  withBorder
+                  bg={message.role === 'user' ? 'blue.1' : 'gray.0'}
+                  style={{ maxWidth: 'calc(100% - 45px)' }}
+                >
+                  <Text>{message.content}</Text>
+                  <Text size="xs" color="dimmed" align="right" mt={4}>
                     {new Date(message.timestamp).toLocaleTimeString()}
-                  </div>
-                </div>
+                  </Text>
+                </Paper>
                 
                 {message.role === 'user' && (
-                  <div style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    backgroundColor: '#52c41a',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white'
-                  }}>
+                  <Avatar radius="xl" color="green">
                     <IconUser size={20} />
-                  </div>
+                  </Avatar>
                 )}
-              </div>
-            </div>
-          ))
-        )}
-        
-        {loading && (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: '8px',
-            marginTop: '16px'
-          }}>
-            <div style={{
-              width: '16px',
-              height: '16px',
-              border: '2px solid #1890ff',
-              borderTopColor: 'transparent',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}></div>
-            <span style={{ fontSize: '14px', color: '#666' }}>Processing your question...</span>
-          </div>
-        )}
-        <div ref={messagesEndRef}></div>
-      </div>
+              </Group>
+            ))
+          )}
+          
+          {loading && (
+            <Group position="center" mt="md">
+              <Loader size="sm" />
+              <Text size="sm" color="dimmed">Processing your question...</Text>
+            </Group>
+          )}
+        </Stack>
+      </ScrollArea>
       
-      {/* Input Area */}
-      <div style={{ 
-        padding: '16px', 
-        borderTop: '1px solid #e0e0e0',
-        backgroundColor: '#f9f9f9'
-      }}>
-        <div style={{ position: 'relative' }}>
+      <Box px="md" py="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>
+        <Group position="apart" spacing="md">
           <TextInput
             placeholder="Ask a question about this document..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
             disabled={loading || !selectedModel}
-            style={{ width: '100%' }}
+            style={{ flex: 1 }}
             size="md"
+            rightSection={
+              <Button
+                variant="filled"
+                radius="xl"
+                onClick={handleSendMessage}
+                disabled={!input.trim() || loading || !selectedModel}
+                size="xs"
+              >
+                <IconSend size={16} />
+              </Button>
+            }
           />
-          <Button
-            style={{
-              position: 'absolute',
-              right: '4px',
-              top: '4px',
-              borderRadius: '50%',
-              minWidth: '32px',
-              width: '32px',
-              height: '32px',
-              padding: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: !input.trim() || loading || !selectedModel ? '#d9d9d9' : '#1890ff',
-              border: 'none',
-              cursor: !input.trim() || loading || !selectedModel ? 'not-allowed' : 'pointer'
-            }}
-            onClick={handleSendMessage}
-            disabled={!input.trim() || loading || !selectedModel}
-          >
-            <IconSend size={16} color="white" />
-          </Button>
-        </div>
-      </div>
-    </div>
+        </Group>
+      </Box>
+    </Box>
   );
 }

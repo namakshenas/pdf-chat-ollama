@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { 
-  Box,
+  Container, 
+  Title, 
   Text, 
   Paper, 
   Stack, 
   Alert, 
   Group,
-  Title
+  Grid,
+  Divider,
+  Box
 } from '@mantine/core';
-import { IconAlertCircle, IconFileText } from '@tabler/icons-react';
+import { IconAlertCircle } from '@tabler/icons-react';
 import { DocumentUploader } from '../components/DocumentUploader';
 import { DocumentList } from '../components/DocumentList';
 import { ChatInterface } from '../components/ChatInterface';
@@ -75,27 +78,18 @@ export default function Home() {
   };
   
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      {/* Header */}
-      <Box 
-        sx={{ 
-          height: 60, 
-          padding: '16px', 
-          borderBottom: '1px solid var(--mantine-color-gray-3)'
-        }}
-      >
-        <Group>
-          <IconFileText size={24} />
-          <Title order={4}>Chat with your PDF locally</Title>
-        </Group>
-      </Box>
-
+    <Container size="xl" py="xl">
+      <Title align="center" mb="sm">PDF Chat with Ollama</Title>
+      <Text align="center" color="dimmed" mb="lg">
+        Upload PDFs and chat with them using your local Ollama models
+      </Text>
+      
       {error && (
         <Alert
           icon={<IconAlertCircle size={16} />}
           title="Error"
           color="red"
-          m="md"
+          mb="md"
           withCloseButton
           onClose={() => setError(null)}
         >
@@ -103,77 +97,61 @@ export default function Home() {
         </Alert>
       )}
       
-      <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* Left Sidebar */}
-        <Box 
-          sx={{ 
-            width: 300, 
-            borderRight: '1px solid var(--mantine-color-gray-3)',
-            display: 'flex',
-            flexDirection: 'column',
-            height: 'calc(100vh - 60px)',
-            overflow: 'hidden'
-          }}
-          p="md"
-        >
-          <Paper withBorder p="md" radius="md" mb="md">
-            <Text weight={500} size="md" mb="xs">
-              Upload a PDF Document
-            </Text>
-            <DocumentUploader 
-              onUploadComplete={handleUploadComplete} 
-              embeddingModelsOnly={true}
-            />
-          </Paper>
-          
-          <Paper 
-            withBorder 
-            p="md" 
-            radius="md" 
-            sx={{ 
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden'
-            }}
-          >
-            <Text weight={500} size="md" mb="xs">
-              Your Documents
-            </Text>
-            <DocumentList 
-              documents={documents} 
-              onSelect={handleSelectDocument}
-              onDelete={handleDeleteDocument}
-              selectedDocumentId={selectedDocument?.id}
-            />
-          </Paper>
-        </Box>
-        
-        {/* Main Content Area */}
-        <Box sx={{ flex: 1, height: 'calc(100vh - 60px)', overflow: 'hidden' }}>
-          {selectedDocument ? (
-            <ChatInterface 
-              documentId={selectedDocument.id}
-              documentName={selectedDocument.name}
-            />
-          ) : (
-            <Box 
-              style={{ 
-                height: '100%', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                padding: '20px',
-                textAlign: 'center'
-              }}
-            >
-              <Text color="dimmed" size="lg">
-                Select a document from the list or upload a new one to start chatting
+      <Grid gutter="md">
+        {/* Left panel: Upload and document list */}
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <Stack spacing="md">
+            <Paper withBorder shadow="md" p="md" radius="md">
+              <Text weight={500} size="lg" mb="xs">
+                Upload a PDF Document
               </Text>
-            </Box>
-          )}
-        </Box>
-      </Box>
-    </Box>
+              <DocumentUploader 
+                onUploadComplete={handleUploadComplete} 
+                embeddingModelsOnly={true}
+              />
+            </Paper>
+            
+            <Paper withBorder shadow="md" p="md" radius="md">
+              <Text weight={500} size="lg" mb="xs">
+                Your Documents
+              </Text>
+              <DocumentList 
+                documents={documents} 
+                onSelect={handleSelectDocument}
+                onDelete={handleDeleteDocument}
+                selectedDocumentId={selectedDocument?.id}
+              />
+            </Paper>
+          </Stack>
+        </Grid.Col>
+        
+        {/* Right panel: Chat interface or placeholder */}
+        <Grid.Col span={{ base: 12, md: 8 }}>
+          <Paper withBorder shadow="md" style={{ height: '100%', minHeight: '70vh' }} radius="md">
+            {selectedDocument ? (
+              <ChatInterface 
+                documentId={selectedDocument.id}
+                documentName={selectedDocument.name}
+              />
+            ) : (
+              <Box 
+                style={{ 
+                  height: '100%', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  padding: '20px',
+                  textAlign: 'center'
+                }}
+              >
+                <Text color="dimmed" size="lg">
+                  Select a document from the list or upload a new one to start chatting
+                </Text>
+              </Box>
+            )}
+          </Paper>
+        </Grid.Col>
+      </Grid>
+    </Container>
   );
 }

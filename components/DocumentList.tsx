@@ -1,6 +1,6 @@
 import React from 'react';
-import { Text, Box } from '@mantine/core';
-import { IconFileText, IconTrash } from '@tabler/icons-react';
+import { Table, ActionIcon, Text, Card, Group, Badge, Stack, Box } from '@mantine/core';
+import { IconTrash, IconMessage, IconCheck } from '@tabler/icons-react';
 import { Document } from '../types';
 
 interface DocumentListProps {
@@ -13,88 +13,66 @@ interface DocumentListProps {
 export function DocumentList({ documents, onSelect, onDelete, selectedDocumentId }: DocumentListProps) {
   if (documents.length === 0) {
     return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <IconFileText size={24} style={{ opacity: 0.5 }} />
-        <Text style={{ marginTop: '8px' }} color="dimmed" size="sm">
+      <Card withBorder p="xl" radius="md">
+        <Text align="center" color="dimmed">
           No documents uploaded yet. Upload a PDF to get started.
         </Text>
-      </div>
+      </Card>
     );
   }
   
   return (
-    <div style={{ height: 'calc(100% - 30px)', overflowY: 'auto' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {documents.map((doc) => (
-          <div 
-            key={doc.id}
-            style={{
-              padding: '8px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              backgroundColor: selectedDocumentId === doc.id ? '#e6f7ff' : 'transparent',
-              border: '1px solid',
-              borderColor: selectedDocumentId === doc.id ? '#1890ff' : '#d9d9d9'
-            }}
-            onClick={() => onSelect(doc)}
-          >
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                overflow: 'hidden',
-                flex: 1
-              }}>
-                <IconFileText size={18} color="#1890ff" />
-                <div style={{ overflow: 'hidden' }}>
-                  <Text weight={500} size="sm" style={{ 
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}>
-                    {doc.name}
-                  </Text>
-                  <Text size="xs" color="dimmed">
-                    {Math.round(doc.size / 1024)} KB
-                  </Text>
-                </div>
-              </div>
-              
-              {selectedDocumentId === doc.id && (
-                <div style={{
-                  fontSize: '10px',
-                  backgroundColor: '#1890ff',
-                  color: 'white',
-                  padding: '2px 6px',
-                  borderRadius: '4px',
-                  marginRight: '8px'
-                }}>
-                  Active
-                </div>
-              )}
-              
-              <div
-                style={{
-                  cursor: 'pointer',
-                  color: '#ff4d4f'
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(doc.id);
-                }}
-                title="Delete this document"
-              >
-                <IconTrash size={14} />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <Stack spacing="xs" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+      {documents.map((doc) => (
+        <Box 
+          key={doc.id}
+          sx={(theme) => ({
+            padding: theme.spacing.sm,
+            borderRadius: theme.radius.sm,
+            cursor: 'pointer',
+            backgroundColor: selectedDocumentId === doc.id ? 
+              theme.colorScheme === 'dark' ? theme.colors.blue[9] : theme.colors.blue[0] : 
+              'transparent',
+            '&:hover': {
+              backgroundColor: selectedDocumentId === doc.id ? 
+                (theme.colorScheme === 'dark' ? theme.colors.blue[9] : theme.colors.blue[0]) : 
+                (theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0])
+            },
+            border: '1px solid',
+            borderColor: selectedDocumentId === doc.id ? 
+              theme.colors.blue[5] : 
+              theme.colorScheme === 'dark' ? theme.colors.dark[5] : theme.colors.gray[2]
+          })}
+          onClick={() => onSelect(doc)}
+        >
+          <Group position="apart" noWrap>
+            <Stack spacing={2} style={{ flex: 1, overflow: 'hidden' }}>
+              <Group position="apart">
+                <Text weight={500} lineClamp={1} style={{ maxWidth: '70%' }}>
+                  {doc.name}
+                </Text>
+                {selectedDocumentId === doc.id && (
+                  <Badge color="blue" variant="light" size="sm">Selected</Badge>
+                )}
+              </Group>
+              <Text size="xs" color="dimmed">
+                {Math.round(doc.size / 1024)} KB • {new Date(doc.uploaded).toLocaleString()}
+              </Text>
+            </Stack>
+            
+            <ActionIcon 
+              color="red" 
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(doc.id);
+              }}
+              title="Delete this document"
+            >
+              <IconTrash size={18} />
+            </ActionIcon>
+          </Group>
+        </Box>
+      ))}
+    </Stack>
   );
 }
